@@ -1,0 +1,12 @@
+# frontend
+/frontend/node_modules
+/frontend/public/build
+
+/frontend/.DS_Store
+/frontend/.env
+
+# docker
+/docker/db/data
+
+#old
+/old

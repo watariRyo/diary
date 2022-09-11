@@ -1,0 +1,46 @@
+<script lang="ts">
+	export let url = "";
+
+	import "smelte/src/tailwind.css";
+	import Footer from "./components/Footer.svelte";
+	import Header from "./components/Header.svelte";
+	import Home from "./components/Home.svelte";
+	import Create from "./components/Create.svelte";
+	import Diary from "./components/Diary.svelte";
+	import About from "./components/About.svelte";
+	import { Router, Link, Route } from "svelte-routing";
+	import "./helpers/firebase";
+</script>
+
+<main class="bg-background-500 dark:bg-dark-300">
+	<Header />
+	<section class="content p-8">
+		<Router {url}>
+			<Route path="diary/:id" let:params><Diary id={params.id} /></Route>
+			<Route path="create" component={Create} />
+			<Route path="about" component={About} />
+			<Route path="/"><Home /></Route>
+		</Router>
+	</section>
+	<Footer />
+</main>
+
+<style>
+	main {
+		text-align: center;
+		max-width: 640px;
+		margin: 0 auto;
+	}
+
+	.content {
+		/* デバイスの画面の高さ - header高さ - footer高さ = 画面ちょうどのコンテンツサイズになる */
+		/* 演算子と数値間に半角スペースないと効かないので注意 */
+		min-height: calc(100vh - 60px - 60px);
+	}
+
+	/* @media (min-width: 640px) {
+		main {
+			max-width: none;
+		}
+	} */
+</style>
