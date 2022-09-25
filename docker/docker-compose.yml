@@ -16,8 +16,22 @@ services:
     ports: 
       - "3306:3306"
     networks:
-      - db-net
+      - diary
+  redis:
+    build:
+      context: ./
+      dockerfile: Dockerfile-redis
+    image: redis:1.0
+    container_name: diary-redis
+    volumes:
+      - ./redis/data:/data
+    expose:
+      - '6379'
+    ports: 
+      - "6379:6379"
+    networks:
+      - diary
 
 networks:
-  db-net:
+  diary:
     driver: bridge
