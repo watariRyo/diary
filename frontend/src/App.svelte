@@ -1,46 +1,69 @@
-<script lang="ts">
-	export let url = "";
+<script>
+  import { onMount } from "svelte";
+  import PageLoader from "./components/page-loader.svelte";
+  import Route from "./components/pager/route.svelte";
+  import Router from "./components/pager/router.svelte";
+  import AdminPage from "./pages/admin-page.svelte";
+  import CallbackPage from "./pages/callback-page.svelte";
+  import HomePage from "./pages/home-page.svelte";
+  import NotFoundPage from "./pages/not-found-page.svelte";
+  import ProfilePage from "./pages/profile-page.svelte";
+  import ProtectedPage from "./pages/protected-page.svelte";
+  import PublicPage from "./pages/public-page.svelte";
+  import { useAuth0 } from "./services/auth0";
 
-	import "smelte/src/tailwind.css";
-	import Footer from "./components/Footer.svelte";
-	import Header from "./components/Header.svelte";
-	import Home from "./components/Home.svelte";
-	import Create from "./components/Create.svelte";
-	import Diary from "./components/Diary.svelte";
-	import About from "./components/About.svelte";
-	import { Router, Link, Route } from "svelte-routing";
-	import "./helpers/firebase";
+  let page;
+  let params;
+
+  let { isLoading, isAuthenticated, login, initializeAuth0 } = useAuth0;
+
+  const authenticationGuard = (ctx, next) => {
+    if ($isAuthenticated) {
+      next();
+    } else {
+      login({ appState: { targetUrl: ctx.pathname } });
+    }
+  };
+
+  const onRedirectCallback = (appState) => {
+    window.history.replaceState(
+      {},
+      document.title,
+      appState && appState.targetUrl
+        ? appState.targetUrl
+        : window.location.pathname
+    );
+  };
+
+  onMount(async () => {
+    await initializeAuth0({ onRedirectCallback });
+  });
 </script>
 
-<main class="bg-background-500 dark:bg-dark-300">
-	<Header />
-	<section class="content p-8">
-		<Router {url}>
-			<Route path="diary/:id" let:params><Diary id={params.id} /></Route>
-			<Route path="create" component={Create} />
-			<Route path="about" component={About} />
-			<Route path="/"><Home /></Route>
-		</Router>
-	</section>
-	<Footer />
-</main>
-
-<style>
-	main {
-		text-align: center;
-		max-width: 640px;
-		margin: 0 auto;
-	}
-
-	.content {
-		/* デバイスの画面の高さ - header高さ - footer高さ = 画面ちょうどのコンテンツサイズになる */
-		/* 演算子と数値間に半角スペースないと効かないので注意 */
-		min-height: calc(100vh - 60px - 60px);
-	}
-
-	/* @media (min-width: 640px) {
-		main {
-			max-width: none;
-		}
-	} */
-</style>
+{#if $isLoading}
+  <div class="page-layout">
+    <PageLoader />
+  </div>
+{:else}
+  <Router>
+    <Route path="/" component={HomePage} />
+    <Route
+      path="/profile"
+      component={ProfilePage}
+      middleware={[authenticationGuard]}
+    />
+    <Route path="/public" component={PublicPage} />
+    <Route
+      path="/protected"
+      component={ProtectedPage}
+      middleware={[authenticationGuard]}
+    />
+    <Route
+      path="/admin"
+      component={AdminPage}
+      middleware={[authenticationGuard]}
+    />
+    <Route path="/callback" component={CallbackPage} />
+    <Route path="*" component={NotFoundPage} />
+  </Router>
+{/if}
