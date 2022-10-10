@@ -1,51 +1,28 @@
-# Hello World API: Actix Web + Rust Sample
+# Hello World API: Golang #
 
-This sample uses [actix-web-httpauth][actix-web-httpauth] and [jsonwebtoken][jsonwebtoken] to implement the following security tasks:
+This repository contains a Golang API server. You'll secure these APIs with Auth0 to practice making secure API calls
+from a client application.
 
-The `add-authorization` branch offers a working API server that exposes a public endpoint along with two protected endpoints. Each endpoint returns a different type of message: public, protected, and admin.
-
-The `GET /api/messages/protected` and `GET /api/messages/admin` endpoints are protected against unauthorized access. Any requests that contain a valid access token in their authorization header can access the protected and admin data.
-
-However, you should require that only access tokens that contain a `read:admin-messages` permission can access the admin data, which is referred to as [Role-Based Access Control (RBAC)](https://auth0.com/docs/authorization/rbac/).
-
-[Check out the `add-rbac` branch]() to see authorization and Role-Based Access Control (RBAC) in action using Auth0.
-
-## Quick Auth0 Set Up
+## Get Started
 
 ### Set up the project
 
-The recommended way to install Rust is via [Rustup](https://rust-lang.github.io/rustup), follow the instructions [here](https://www.rust-lang.org/tools/install).
-
-Install the [toolchain](https://rust-lang.github.io/rustup/concepts/toolchains.html):
-
-```bash
-rustup toolchain install 1.56
-```
-
 Install the project dependencies:
 
 ```bash
-cargo build
+go mod download
 ```
 
-Install the project dependencies:
+Open the `env.yaml` file at the root of the project and update the values of `auth0-audience` and `auth0-domain`.
 
-Create `.env` file under the project directory:
-
-```bash
-touch .env
+```yaml
+auth0-audience: my_auth0_api_audience
+auth0-domain: my_auth0_tenant_domain
 ```
 
-Populate `.env` as follows:
+The following sections further details the steps to identify the values for these variables within your setup.
 
-```bash
-PORT=6060
-CLIENT_ORIGIN_URL=http://localhost:4040
-AUTH0_AUDIENCE=
-AUTH0_DOMAIN=
-```
-
-### Register a(n) Actix Web API with Auth0
+### Register a Golang API with Auth0
 
 - Open the [APIs](https://manage.auth0.com/#/apis) section of the Auth0 Dashboard.
 
@@ -61,29 +38,31 @@ AUTH0_DOMAIN=
 
 > View ["Register APIs" document](https://auth0.com/docs/get-started/set-up-apis) for more details.
 
-### Connect Actix Web with Auth0
+### Get API configuration values
 
-Get the values for `AUTH0_AUDIENCE` and `AUTH0_DOMAIN` in `.env` from your Auth0 API in the Dashboard.
+Head back to your Auth0 API page, and follow these steps to get the Auth0 Audience:
 
-Head back to your Auth0 API page, and **follow these steps to get the Auth0 Audience**:
+![Get the Auth0 Audience to configure an API](https://images.ctfassets.net/23aumh6u8s0i/1CaZWZK062axeF2cpr884K/cbf29676284e12f8e234545de05dac58/get-the-auth0-audience)
 
-![Get the Auth0 Audience to configure an API](https://cdn.auth0.com/blog/complete-guide-to-user-authentication/get-the-auth0-audience.png)
+- Click on the "Settings" tab.
 
-1. Click on the **"Settings"** tab.
+- Locate the "Identifier" field and copy its value.
 
-2. Locate the **"Identifier"** field and copy its value.
+- Paste the Auth0 domain value as the value of `auth0-audience` in `env.yaml`.
 
-3. Paste the "Identifier" value as the value of `AUTH0_AUDIENCE` in `.env`.
+Now, follow these steps to get the Auth0 Domain value:
 
-Now, **follow these steps to get the Auth0 Domain value**:
+![Get the Auth0 Domain to configure an API](https://images.ctfassets.net/23aumh6u8s0i/37J4EUXKJWZxHIyxAQ8SYI/d968d967b5e954fc400163638ac2625f/get-the-auth0-domain)
 
-![Get the Auth0 Domain to configure an API](https://cdn.auth0.com/blog/complete-guide-to-user-authentication/get-the-auth0-domain.png)
+- Click on the "Test" tab.
 
-1. Click on the **"Test"** tab.
-2. Locate the section called **"Asking Auth0 for tokens from my application"**.
-3. Click on the **cURL** tab to show a mock `POST` request.
-4. Copy your Auth0 domain, which is _part_ of the `--url` parameter value: `tenant-name.region.auth0.com`.
-5. Paste the Auth0 domain value as the value of `AUTH0_DOMAIN` in `.env`.
+- Locate the section called "Asking Auth0 for tokens from my application".
+
+- Click on the cURL tab to show a mock `POST` request.
+
+- Locate your Auth0 domain, which is part of the `--url` parameter value: `tenant-name.region.auth0.com`.
+
+- Paste the Auth0 domain value as the value of `auth0-domain` in `env.yaml`.
 
 **Tips to get the Auth0 Domain**
 
@@ -93,13 +72,35 @@ Now, **follow these steps to get the Auth0 Domain value**:
 
 - The `region` subdomain (`au`, `us`, or `eu`) is optional. Some Auth0 Domains don't have it.
 
-### Run the project
+### Run the API server:
 
-With the `.env` configuration values set, run the API server by issuing the following command:
+Run the API server by using any of the following commands. Please replace `my_auth0_api_audience`
+and `my_auth0_api_domain` values appropriate as per your setup using instructions above.
 
-```bash
-cargo run
+```shell
+# with a populated env.yaml present in current directory
+go run .
+
+# Alternatively, if env.yaml is not present, you can also pass values using CLI parameters  
+go run . -a my_auth0_api_audience -d my_auth0_api_domain
+
+# OR, you can pass values using shell variables on CLI
+AUTH0_AUDIENCE=my_auth0_api_audience AUTH0_DOMAIN=my_auth0_api_domain go run .
+
+# OR, you may also expose the values as environment variable upfront
+export AUTH0_AUDIENCE=my_auth0_api_audience
+export AUTH0_DOMAIN=my_auth0_api_domain
+go run .
 ```
+
+In case the auth0 `audience` and `domain` values are present at multiple sources, the following precedence order is used
+to determine effective values:
+
+- CLI parameters values has the highest precedence
+
+- Shell/Environment variables takes the next precedence
+
+- Values from `env.yaml` has the lowest precedence
 
 ## Test the Protected Endpoints
 
@@ -119,105 +120,69 @@ curl --request GET \
   --header 'authorization: Bearer really-long-string-which-is-test-your-access-token'
 ```
 
-Replace the value of `http://path_to_your_api/` with your protected API endpoint path (you can find all the available API endpoints in the next section) and execute the command. You should receive back a successful response from the server.
+Replace the value of `http://path_to_your_api/` with your protected API endpoint path (you can find all the available
+API endpoints in the next section) and execute the command. You should receive back a successful response from the
+server.
 
-You can try out any of our full stack demos to see the client-server Auth0 workflow in action using your preferred front-end and back-end technologies.
+You can try out any of our full stack demos to see the client-server Auth0 workflow in action using your preferred
+front-end and back-end technologies.
 
 ## API Endpoints
 
 ### 🔓 Get public message
 
-```bash
+```shell
 GET /api/messages/public
 ```
 
 #### Response
 
-```bash
+```shell
 Status: 200 OK
 ```
 
 ```json
 {
-  "api": "api_actix-web_rust_hello-world",
-  "branch": "basic-authorization",
-  "text": "The secured API doesn't require an access token to share this public message.",
+  "message": "The API doesn't require an access token to share this message."
 }
 ```
 
-> 🔐 Protected Endpoints: These endpoints require the request to include an access token issued by Auth0 in the authorization header.
+### 🔓 Get protected message
 
-### 🔐 Get protected message
+> You need to protect this endpoint using Auth0.
 
-```bash
+```shell
 GET /api/messages/protected
 ```
 
 #### Response
 
-```bash
+```shell
 Status: 200 OK
 ```
 
 ```json
 {
-  "api": "api_actix-web_rust_hello-world",
-  "branch": "basic-authorization",
-  "text": "The secured API requires a valid access token to share this protected message."
+  "message": "The API successfully validated your access token."
 }
 ```
 
-### 🔐 Get admin message
+### 🔓 Get admin message
 
-> You need to protect this endpoint using Role-Based Access Control (RBAC).
+> You need to protect this endpoint using Auth0 and Role-Based Access Control (RBAC).
 
-```bash
+```shell
 GET /api/messages/admin
 ```
 
 #### Response
 
-```bash
+```shell
 Status: 200 OK
 ```
 
 ```json
 {
-  "api": "api_actix-web_rust_hello-world",
-  "branch": "basic-authorization",
-  "text": "The secured API requires a valid access token to share this admin message."
+  "message": "The API successfully recognized you as an admin."
 }
 ```
-
-## Error Handling
-
-### 400s errors
-
-#### Response
-
-```bash
-Status: Corresponding 400 status code
-```
-
-```json
-{
-  "message": "Message that describes the error that took place."
-}
-```
-
-### 500s errors
-
-#### Response
-
-```bash
-Status: 500 Internal Server Error
-```
-
-```json
-{
-  "message": "Message that describes the error that took place."
-}
-```
-
-[actix-web-httpauth]: https://crates.io/crates/actix-web-httpauth
-[jsonwebtoken]: https://crates.io/crates/jsonwebtoken
